@@ -1,16 +1,15 @@
 # Based on https://github.com/indykoning/unlighthouse-docker/tree/master
-FROM alpine
+FROM node:22-bullseye
 
-RUN apk add --no-cache \
-      chromium \
-      nss \
-      freetype \
-      harfbuzz \
-      ca-certificates \
-      ttf-freefont
+RUN apt update --fix-missing; \
+    apt install -y chromium; \
+    apt install -y nss-passwords; \
+    apt install -y libfreetype6; \
+    apt install -y libharfbuzz-bin; \
+    apt install -y ca-certificates; \
+    apt install -y fonts-freefont-ttf;
 
-RUN apk add nodejs npm yarn; \
-    npm install -g unlighthouse
+RUN npm install -g unlighthouse
 
 EXPOSE 5678
 
@@ -22,11 +21,12 @@ RUN chown root:root /usr/lib/chromium/chrome-sandbox && \
     chmod 4755 /usr/lib/chromium/chrome-sandbox
 
 # Add user so we don't need --no-sandbox.
-RUN addgroup -S unlighthouse && adduser -S -G unlighthouse unlighthouse \
+RUN adduser --help
+RUN addgroup unlighthouse && adduser --ingroup unlighthouse unlighthouse \
     && mkdir -p /home/unlighthouse/Downloads /app \
     && chown -R unlighthouse:unlighthouse /home/unlighthouse \
     && chown -R unlighthouse:unlighthouse /app
 
 # Run everything after as non-privileged user.
-USER unlighthouse
+USER root
 WORKDIR /home/unlighthouse
