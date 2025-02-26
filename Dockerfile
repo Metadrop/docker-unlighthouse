@@ -1,32 +1,38 @@
-# Based on https://github.com/indykoning/unlighthouse-docker/tree/master
-FROM node:22-bullseye
+FROM debian:bookworm-slim
 
-RUN apt update --fix-missing; \
-    apt install -y chromium; \
-    apt install -y nss-passwords; \
-    apt install -y libfreetype6; \
-    apt install -y libharfbuzz-bin; \
-    apt install -y ca-certificates; \
-    apt install -y fonts-freefont-ttf;
+# Install dependencies.
+RUN set -eux; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends \
+    ca-certificates=20230311 \
+    curl=7.88.* \
+    gpg=2.2.* \
+  ; \
+  \
+  curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | tee /etc/apt/trusted.gpg.d/nodesource.asc; \
+  echo 'deb [signed-by=/etc/apt/trusted.gpg.d/nodesource.asc] https://deb.nodesource.com/node_22.x nodistro main' | tee /etc/apt/sources.list.d/nodesource.list; \
+  \
+	apt-get update; \
+	apt-get install -y --no-install-recommends \
+    nodejs=22.* \
+    chromium=133.0.* \
+	; \
+	\
+	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+	rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g unlighthouse
+# Install unlighthouse and remove unwanted puppeteer chrome.
+RUN --mount=type=cache,target=/root/.npm npm install -g @unlighthouse/cli \
+  && npm cache clean --force \
+  && rm -rf /root/.cache/puppeteer
 
 EXPOSE 5678
 
-# Tell Puppeteer to skip installing Chrome. We'll be using the installed package.
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-ENV SITE="http://localhost"
-
-RUN chown root:root /usr/lib/chromium/chrome-sandbox && \
-    chmod 4755 /usr/lib/chromium/chrome-sandbox
-
 # Add user so we don't need --no-sandbox.
-RUN adduser --help
 RUN addgroup unlighthouse && adduser --ingroup unlighthouse unlighthouse \
     && mkdir -p /home/unlighthouse/Downloads /app \
     && chown -R unlighthouse:unlighthouse /home/unlighthouse \
     && chown -R unlighthouse:unlighthouse /app
 
-# Run everything after as non-privileged user.
-USER root
+USER unlighthouse
 WORKDIR /home/unlighthouse
