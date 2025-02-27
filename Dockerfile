@@ -21,10 +21,13 @@ RUN set -eux; \
 	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
 	rm -rf /var/lib/apt/lists/*
 
+# Puppeteer.
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
 # Install unlighthouse and remove unwanted puppeteer chrome.
 RUN --mount=type=cache,target=/root/.npm npm install -g @unlighthouse/cli \
-  && npm cache clean --force \
-  && rm -rf /root/.cache/puppeteer
+  && npm cache clean --force
 
 EXPOSE 5678
 
