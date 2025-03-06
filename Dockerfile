@@ -26,7 +26,7 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 # Install unlighthouse and remove unwanted puppeteer chrome.
-RUN --mount=type=cache,target=/root/.npm npm install -g @unlighthouse/cli \
+RUN --mount=type=cache,target=/root/.npm npm install -g unlighthouse \
   && npm cache clean --force
 
 EXPOSE 5678
